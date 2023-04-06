@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mailserver:
+    image: docker.io/mailserver/docker-mailserver:latest
+    container_name: mailserver
+    hostname: mail
+    restart: always
+    # Change this to your domain, it is used for your email accounts (eg: user@example.com):
+    domainname: nissart.xyz
+    ports:
+      - "25:25" #sending mails
+      - "587:587" #SMTP server
+      - "465:465" #SMTP server
+      - "993:993" #IMAP server
+      - "143:143" #IMAP server
+    volumes:
+      - /root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.nissart.xyz/mail.nissart.xyz.crt:/etc/letsencrypt/live/mail.nissart.xyz/fullchain.pem
+      - /root/.local/share/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.nissart.xyz/mail.nissart.xyz.key:/etc/letsencrypt/live/mail.nissart.xyz/privkey.pem
+      - mail-postfix:/etc/postfix/
+      - mail-data:/var/mail/
+      - mail-state:/var/mail-state/
+      - mail-logs:/var/log/mail/
+      - config:/tmp/docker-mailserver/
+      # The "from" path will vary based on where your certs are locally:
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - ENABLE_SPAMASSASSIN=1
+      - SPAMASSASSIN_SPAM_TO_INBOX=1
+      - ENABLE_CLAMAV=1
+      - ENABLE_FAIL2BAN=1
+      - ENABLE_POSTGREY=0
+      # Using letsencrypt for SSL/TLS certificates
+      - SSL_TYPE=letsencrypt
+      # Allow sending emails from other docker containers
+      # Beware creating an Open Relay: https://docker-mailserver.github.io/docker-mailserver/edge/config/environment/#permit_docker
+      - PERMIT_DOCKER=network
+      # All env below are default settings:
+      - ONE_DIR=1
+    cap_add:
+      - NET_ADMIN # For Fail2Ban to work
+      
+volumes:
+  mail-data:
+  mail-state:
+  mail-logs:
+  mail-postfix:
+  config:

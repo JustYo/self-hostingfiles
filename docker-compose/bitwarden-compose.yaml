@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  ovpn:
+    image: vaultwarden/server:latest
+    restart: always
+    volumes:
+      - Bitwarden:/data/
+    ports:
+      # - [local_port]:80
+      # - [local_port]:3012
+    cap_add:
+      - NET_ADMIN
+      
+volumes:
+  Bitwarden:
+    external: true
